@@ -1,0 +1,45 @@
+name: Bug Report
+description: Report a crash, incorrect prayer calculation, UI glitch, or sync issue in Noor.
+title: "[Bug]: "
+labels: [ "bug" ]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for reporting an issue. Please provide clear reproduction details below.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Concise description of the bug and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Solat & Qibla tab
+        2. Tap ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: App Area
+      options:
+        - Today (Quran & Hadith)
+        - Solat & Qibla / Mosque Finder
+        - Salawat & Haptics
+        - Ask AI
+        - Archive & Sync
+        - Home Widget / Notifications
+        - Google Play Billing (Sadaqah)
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device & Android Version
+      placeholder: "e.g., Pixel 8, Android 15 (API 35)"
+    validations:
+      required: true

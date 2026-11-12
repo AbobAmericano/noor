@@ -1,0 +1,26 @@
+name: Feature Request
+description: Propose a thoughtful improvement or new spiritual companion capability for Noor.
+title: "[Feature]: "
+labels: [ "enhancement" ]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What need or improvement does this address?
+      description: Explain how this fits Noor's minimalist, low-RAM design philosophy.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed behavior
+      description: Describe the screens, interactions, or settings you envision.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Alignment checks
+      options:
+        - label: Works gracefully offline or on low-end devices
+        - label: Respects user privacy without unnecessary permissions
