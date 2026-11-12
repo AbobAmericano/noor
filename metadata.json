@@ -1,0 +1,6 @@
+{
+  "name": "Noor",
+  "description": "Minimalist daily Quran & Hadith inspiration, personalized reflection archive, Qibla compass, geolocation Solat times with reminders, home screen widget, and Salawat dhikr counter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

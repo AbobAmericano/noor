@@ -1,0 +1,177 @@
+{
+  "entities": {
+    "SavedVerse": {
+      "title": "SavedVerse",
+      "description": "A Quran verse or Hadith saved by a user with an optional personal reflection note.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["QURAN", "HADITH"],
+          "description": "Whether the quote is from Quran or Hadith."
+        },
+        "reference": {
+          "type": "string",
+          "description": "Human-readable citation such as Surah Al-Baqarah 2:286 or Sahih al-Bukhari 6018."
+        },
+        "arabicText": {
+          "type": "string",
+          "description": "Original Arabic text of the verse or hadith."
+        },
+        "translation": {
+          "type": "string",
+          "description": "English translation text."
+        },
+        "sourceUrl": {
+          "type": "string",
+          "description": "Canonical quran.com or sunnah.com URL."
+        },
+        "tafsirUrl": {
+          "type": "string",
+          "description": "Contextual tafsir or commentary URL."
+        },
+        "reflectionNote": {
+          "type": "string",
+          "description": "Personal reflection note written by the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when saved; clients must submit FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when last updated; clients must submit FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "sourceType",
+        "reference",
+        "arabicText",
+        "translation",
+        "sourceUrl",
+        "tafsirUrl",
+        "reflectionNote",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DhikrLog": {
+      "title": "DhikrLog",
+      "description": "Daily Salawat and dhikr counter log plus daily 5-prayer milestone checklist.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "dateKey": {
+          "type": "string",
+          "description": "ISO date key YYYY-MM-DD."
+        },
+        "salawatCount": {
+          "type": "integer",
+          "description": "Total Salawat count logged on this date."
+        },
+        "tasbihCount": {
+          "type": "integer",
+          "description": "Total general dhikr/tasbih count logged on this date."
+        },
+        "dailyTarget": {
+          "type": "integer",
+          "description": "Daily Salawat target."
+        },
+        "completedPrayers": {
+          "type": "array",
+          "description": "List of completed daily prayer names (up to 6)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created; clients must submit FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated; clients must submit FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "dateKey",
+        "salawatCount",
+        "tasbihCount",
+        "dailyTarget",
+        "completedPrayers",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DhikrProfile": {
+      "title": "DhikrProfile",
+      "description": "Aggregate Salawat milestone and streak summary for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "lifetimeSalawat": {
+          "type": "integer",
+          "description": "Total lifetime Salawat recited."
+        },
+        "currentStreakDays": {
+          "type": "integer",
+          "description": "Consecutive active dhikr days."
+        },
+        "lastActiveDate": {
+          "type": "string",
+          "description": "Last active YYYY-MM-DD date string."
+        },
+        "unlockedMilestones": {
+          "type": "array",
+          "description": "Milestone IDs unlocked by the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created; clients must submit FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated; clients must submit FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "lifetimeSalawat",
+        "currentStreakDays",
+        "lastActiveDate",
+        "unlockedMilestones",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/saved_verses/{verseId}": {
+      "schema": { "$ref": "#/entities/SavedVerse" },
+      "description": "User's personalized archive of favorite Quran verses and Hadiths with reflection notes."
+    },
+    "/users/{userId}/dhikr_logs/{logId}": {
+      "schema": { "$ref": "#/entities/DhikrLog" },
+      "description": "Daily Salawat dhikr counts and Solat prayer completion logs keyed by YYYY-MM-DD."
+    },
+    "/users/{userId}/dhikr_profile/{profileId}": {
+      "schema": { "$ref": "#/entities/DhikrProfile" },
+      "description": "User's lifetime Salawat summary and unlocked spiritual milestones."
+    }
+  }
+}

@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Noor</string>
+    <string name="widget_daily_name">Noor Daily Verse</string>
+    <string name="widget_daily_description">Minimalist Quran &amp; Hadith daily inspiration with upcoming Solat time.</string>
+    <string name="sign_in_tagline">Daily Quran &amp; Hadith inspiration, synced reflection archive, Solat reminders, and Salawat milestones.</string>
+    <string name="sadaqah_product_id" translatable="false">sadaqah_tip_2myr</string>
+</resources>

@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default deny everything
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidSavedVerse(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.sourceType in ['QURAN', 'HADITH'] &&
+             data.reference is string && data.reference.size() >= 1 && data.reference.size() <= 200 &&
+             data.arabicText is string && data.arabicText.size() <= 4000 &&
+             data.translation is string && data.translation.size() >= 1 && data.translation.size() <= 4000 &&
+             data.sourceUrl is string && data.sourceUrl.size() <= 500 &&
+             data.tafsirUrl is string && data.tafsirUrl.size() <= 500 &&
+             data.reflectionNote is string && data.reflectionNote.size() <= 2000;
+    }
+
+    function isValidDhikrLog(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.dateKey is string && data.dateKey.size() >= 8 && data.dateKey.size() <= 20 &&
+             data.salawatCount is int && data.salawatCount >= 0 && data.salawatCount <= 1000000 &&
+             data.tasbihCount is int && data.tasbihCount >= 0 && data.tasbihCount <= 1000000 &&
+             data.dailyTarget is int && data.dailyTarget >= 1 && data.dailyTarget <= 100000 &&
+             data.completedPrayers is list && data.completedPrayers.size() <= 6 &&
+             (data.completedPrayers.size() == 0 || data.completedPrayers[0] is string);
+    }
+
+    function isValidDhikrProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.lifetimeSalawat is int && data.lifetimeSalawat >= 0 && data.lifetimeSalawat <= 100000000 &&
+             data.currentStreakDays is int && data.currentStreakDays >= 0 && data.currentStreakDays <= 100000 &&
+             data.lastActiveDate is string && data.lastActiveDate.size() <= 20 &&
+             data.unlockedMilestones is list && data.unlockedMilestones.size() <= 20 &&
+             (data.unlockedMilestones.size() == 0 || data.unlockedMilestones[0] is string);
+    }
+
+    match /users/{userId}/saved_verses/{verseId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(verseId);
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       isValidId(verseId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'sourceType', 'reference', 'arabicText', 'translation', 'sourceUrl', 'tafsirUrl', 'reflectionNote', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'sourceType', 'reference', 'arabicText', 'translation', 'sourceUrl', 'tafsirUrl', 'reflectionNote', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       isValidSavedVerse(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidSavedVerse(incoming()) &&
+                       request.auth.uid == userId &&
+                       isValidId(verseId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['reflectionNote', 'updatedAt']);
+
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(verseId);
+    }
+
+    match /users/{userId}/dhikr_logs/{logId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(logId);
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       isValidId(logId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'dateKey', 'salawatCount', 'tasbihCount', 'dailyTarget', 'completedPrayers', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'dateKey', 'salawatCount', 'tasbihCount', 'dailyTarget', 'completedPrayers', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       isValidDhikrLog(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidDhikrLog(incoming()) &&
+                       request.auth.uid == userId &&
+                       isValidId(logId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().dateKey == existing().dateKey &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['salawatCount', 'tasbihCount', 'dailyTarget', 'completedPrayers', 'updatedAt']);
+
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(logId);
+    }
+
+    match /users/{userId}/dhikr_profile/{profileId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(profileId);
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       isValidId(profileId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'lifetimeSalawat', 'currentStreakDays', 'lastActiveDate', 'unlockedMilestones', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'lifetimeSalawat', 'currentStreakDays', 'lastActiveDate', 'unlockedMilestones', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       isValidDhikrProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidDhikrProfile(incoming()) &&
+                       request.auth.uid == userId &&
+                       isValidId(profileId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['lifetimeSalawat', 'currentStreakDays', 'lastActiveDate', 'unlockedMilestones', 'updatedAt']);
+
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(profileId);
+    }
+  }
+}
