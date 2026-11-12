@@ -90,8 +90,8 @@ app/src/main/java/com/example/
 
 ### Prerequisites
 
-- **JDK 17+** (or JDK 11+ compatible with Android Studio / AGP `9.1.1`)
-- **Android SDK 36** (`compileSdk = 36`, `minSdk = 24`)
+- **JDK 21** (required for Robolectric tests targeting Android SDK 36)
+- **Android SDK 36 (`android-36.1`)** (`compileSdk = 36` minor API 1, `minSdk = 24`)
 - **Gradle `9.3.1`** (or Android Studio Ladybug / Meerkat+)
 - A **Firebase project** with Authentication (Google Sign-In provider), Cloud Firestore, App Check, and Firebase AI Logic enabled
 

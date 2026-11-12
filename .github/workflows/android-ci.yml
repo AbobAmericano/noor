@@ -5,6 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 concurrency:
   group: android-ci-${{ github.ref }}
@@ -19,22 +20,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Accept Android SDK licenses & install SDK 36.1
+        run: |
+          SDK_DIR="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          SDKMANAGER=$(find "$SDK_DIR/cmdline-tools" -name sdkmanager -type f 2>/dev/null | head -n 1)
+          if [ -n "$SDKMANAGER" ]; then
+            yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+            "$SDKMANAGER" --install "platform-tools" "platforms;android-36" "platforms;android-36.1" "build-tools;36.0.0" || true
+          fi
 
       - name: Prepare debug keystore
         run: |
-          if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
-            base64 -d debug.keystore.base64 > debug.keystore
+          if [ ! -f debug.keystore ]; then
+            if [ -f debug.keystore.base64 ]; then
+              base64 -d debug.keystore.base64 > debug.keystore
+            else
+              keytool -genkeypair -v -keystore debug.keystore -storepass android \
+                -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+                -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+            fi
           fi
 
       - name: Set up Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 9.3.1
+          gradle-version: '9.3.1'
 
       - name: Run unit & Robolectric tests
         run: |
@@ -43,10 +59,10 @@ jobs:
             --tests "com.example.ExampleRobolectricTest" \
             --tests "com.example.domain.solat.SolatCalculatorTest" \
             --tests "com.example.sensors.DhikrHapticHelperTest" \
-            --no-daemon
+            --no-daemon --stacktrace
 
       - name: Build Debug APK
-        run: gradle :app:assembleDebug --no-daemon
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
 
       - name: Upload unit test report
         if: always()
