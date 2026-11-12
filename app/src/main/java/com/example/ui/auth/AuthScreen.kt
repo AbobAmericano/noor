@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Button
@@ -51,12 +53,14 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import com.example.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
@@ -98,7 +102,9 @@ fun AuthScreen(
             Column(
                 modifier = Modifier
                     .widthIn(max = 460.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -244,6 +250,10 @@ fun attemptAutoSignIn(
     onUnauthenticated: () -> Unit,
     scope: CoroutineScope
 ) {
+    if (FirebaseApp.getApps(context).isEmpty()) {
+        onUnauthenticated()
+        return
+    }
     if (Firebase.auth.currentUser != null) {
         onAuthSuccess()
         return
@@ -316,10 +326,31 @@ fun onGoogleSignInClicked(
             }
         } catch (e: GetCredentialCancellationException) {
             Log.w("Auth", "Google Sign-In flow cancelled or dismissed: ${e.message}", e)
-            onAuthCancelled()
+            val msg = e.message.orEmpty()
+            if (msg.contains("reauth", ignoreCase = true) ||
+                msg.contains("developer", ignoreCase = true) ||
+                msg.contains("10:", ignoreCase = true)
+            ) {
+                onAuthError("Google Sign-In verification failed for this APK. Add this APK's SHA-1 & SHA-256 fingerprint in Firebase Console.")
+            } else {
+                onAuthCancelled()
+            }
+        } catch (e: NoCredentialException) {
+            Log.w("Auth", "No Google credentials available: ${e.message}", e)
+            onAuthError("No Google account available or this APK's SHA-1 fingerprint is not registered in Firebase Console.")
         } catch (e: Exception) {
             Log.e("Auth", "Google Sign-In failed", e)
-            onAuthError(e.localizedMessage ?: "Sign in failed. Please try again.")
+            val raw = e.localizedMessage.orEmpty()
+            val friendly = if (raw.contains("reauth", ignoreCase = true) ||
+                raw.contains("developer", ignoreCase = true) ||
+                raw.contains("10:", ignoreCase = true) ||
+                raw.contains("28436", ignoreCase = true)
+            ) {
+                "Google Sign-In SHA-1/OAuth mismatch. Add your APK signing key SHA-1 & SHA-256 to Firebase Console and rebuild with updated google-services.json."
+            } else {
+                raw.ifBlank { "Sign in failed. Please try again." }
+            }
+            onAuthError(friendly)
         }
     }
 }

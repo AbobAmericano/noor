@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -138,18 +139,29 @@ fun AppNavigation(
     prefsRepo: NoorPreferencesRepository,
     auth: FirebaseAuth = Firebase.auth
 ) {
-    val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
-    val user = currentUser
+    var user by remember(auth) { mutableStateOf(auth.currentUser) }
 
-    if (user == null) {
+    DisposableEffect(auth) {
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            user = firebaseAuth.currentUser
+        }
+        auth.addAuthStateListener(listener)
+        user = auth.currentUser
+        onDispose {
+            auth.removeAuthStateListener(listener)
+        }
+    }
+
+    val activeUser = user
+    if (activeUser == null) {
         AuthScreen(
-            onAuthSuccess = { /* AuthStateListener updates currentUser reactively */ }
+            onAuthSuccess = { user = auth.currentUser }
         )
     } else {
-        key(user.uid) {
+        key(activeUser.uid) {
             MainNoorShell(
-                currentUserId = user.uid,
-                userEmail = user.email,
+                currentUserId = activeUser.uid,
+                userEmail = activeUser.email,
                 prefsRepo = prefsRepo
             )
         }
