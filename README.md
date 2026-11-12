@@ -99,8 +99,8 @@ app/src/main/java/com/example/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/<your-username>/<your-repo>.git
-   cd <your-repo>
+   git clone https://github.com/AbobAmericano/noor.git
+   cd noor
    ```
 2. **Prepare the debug keystore** (if not generated automatically by Android Studio)
    ```bash
@@ -155,3 +155,11 @@ gradle :app:testDebugUnitTest --tests "com.example.data.repository.NoorFirestore
 - [`SECURITY.md`](SECURITY.md) — Vulnerability reporting, zero-trust Firestore rules, and secret hygiene
 - [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) — App permissions and user data handling
 - [`LICENSE`](LICENSE) — Distributed under the MIT License
+
+---
+
+## Contributors
+
+- **[@AbobAmericano](https://github.com/AbobAmericano)** — Project author & maintainer
+- **Google AI Studio** — Contributor (application architecture, Compose implementation, Firebase integration & documentation)
+
